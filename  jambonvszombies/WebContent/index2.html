@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.2.custom.css" />
+<title>Get'em before</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<style>
+body {
+	background-color: #111;
+	color: #fff;
+	margin: 0px;
+	overflow: hidden;
+}
+
+a {
+	color: #f00
+}
+
+#welcome_panel {
+	left: 80%;
+	width: 20%;
+	position: absolute;
+}
+
+#welcome_panel {
+	text-align: center;
+	font-size: small;
+	font-weight: bold;
+	line-height: 1px;
+}
+
+#welcome_panel>div>p {
+	text-align: center;
+	font-size: medium;
+	font-weight: bold;
+	line-height: 1px;
+	font-variant: small-caps;
+}
+
+#stats {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+#stats #fps {
+	background: white !important
+}
+
+#stats #fps #fpsText {
+	color: #eb8f00 !important
+}
+</style>
+</head>
+<body>
+	<div id="container">
+		<div id="welcome_panel" class="ui-widget-content">
+			<div class="ui-widget-header">
+				<p>Get'em before!</p>
+			</div>
+			<p>Move with arrows</p>
+			<p>look/zoom with mouse</p>
+		</div>
+	</div>
+
+	<!-- core -->
+	<script type="text/javascript" src="js/core/jquery-1.9.1.min.js"></script>
+	<!-- le moteur 3d de Monsieur Doob -->
+	<script src="js/core/three.js"></script>
+	<script type="text/javascript" src="js/core/underscore.js"></script>
+	<script type="text/javascript" src="js/core/backbone.js"></script>
+	<!-- en dev, on veut voir ses FPS. TOUJOURS, on veut toujours voir -->
+	<script src="js/ui/stats.min.js"></script>
+	<!-- Capte les inputs, est bindé par le MD2CharacterComplex -->
+	<script src="js/controls/TrackballControls.js"></script>
+	<!-- Represente un personnage qui interagit aux inputs
+		Il se déplace, peut avoir une arme, peut sauter, etc...-->
+	<script src='js/core/MD2CharacterComplex.js'></script>
+
+
+	<!-- game -->
+	<script type="text/javascript" src="js/game/Game.js"></script>
+	<script type="text/javascript" src="js/game/view/CharacterView.js"></script>
+	<script type="text/javascript" src="js/game/view/AppView.js"></script>
+	<script type="text/javascript" src="js/game/controller/AppController.js"></script>
+	<script type="text/javascript">
+		Game.Controllers.App.initialize();
+		Game.Controllers.App.animate();
+	</script>
+
+<!-- ui -->
+	<script type="text/javascript" src="js/ui/jquery-ui-1.10.2.custom.js"></script>
+	<!-- webgl obligatoire ! -->
+	<script src="js/ui/detector.js"></script>
+
+
+</body>
+</html>
