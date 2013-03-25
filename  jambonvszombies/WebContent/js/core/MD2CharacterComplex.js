@@ -10,18 +10,18 @@ THREE.MD2CharacterComplex = function() {
 
 	// animation parameters
 
-	this.animationFPS = 6;
-	this.transitionFrames = 15;
+	this.animationFPS = 22;
+	this.transitionFrames =11;
 
 	// movement model parameters
 
-	this.maxSpeed = 275;
+	this.maxSpeed = 500;
 	this.maxReverseSpeed = -275;
 
-	this.frontAcceleration = 600;
-	this.backAcceleration = 600;
+	this.frontAcceleration = 900;
+	this.backAcceleration = 900;
 
-	this.frontDecceleration = 600;
+	this.frontDecceleration = 900;
 
 	this.angularSpeed = 2.5;
 

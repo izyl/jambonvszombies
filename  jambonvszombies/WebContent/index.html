@@ -4,12 +4,12 @@
 <script type="text/javascript" src="js/core/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="js/ui/jquery-ui-1.10.2.custom.js"></script>
 <head>
-<title>Get'em before</title>
+<title>Jambon VS Zombies</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <style>
 body {
-	background-color: #111;
+	background-color: #bfd1e5;
 	color: #fff;
 	margin: 0px;
 	overflow: hidden;
@@ -59,10 +59,11 @@ a {
 	<div id="container">
 		<div id="welcome_panel" class="ui-widget-content">
 			<div class="ui-widget-header">
-				<p>Get'em before!</p>
+				<p>Jambon VS Zombies</p>
+				<i>il y a des jambons, il y a des zombies, ramasse des jambons, défonce des zombies et surtout ... COURS</i>
 			</div>
-			<p>Move with arrows</p>
-			<p>look/zoom with mouse</p>
+			<p>Bouge avec les flèches</p>
+			<p>regarde et zoom avec la souris</p>
 		</div>
 	</div>
 	<!-- webgl obligatoire ! -->
@@ -80,13 +81,6 @@ a {
 	<script src='js/core/MD2CharacterComplex.js'></script>
 
 	<script>
-	
-	window.Game = {
-			Models: {},
-			Controllers: {},
-			Views: {}
-		};
-	
 		if (!Detector.webgl)
 			Detector.addGetWebGLMessage();
 
@@ -120,23 +114,20 @@ a {
 
 			// CAMERA
 
-			camera = new THREE.PerspectiveCamera(45, window.innerWidth
-					/ window.innerHeight, 1, 4000);
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
 			camera.position.set(0, 150, 1300);
 
 			// SCENE
 
 			scene = new THREE.Scene();
-			scene.fog = new THREE.Fog(0xffffff, 1000, 4000);
+			//scene.fog = new THREE.Fog(0xffffff, 1000, 4000);
 
 			scene.add(camera);
 
 			// LIGHTS
 
-			scene.add(new THREE.AmbientLight(0x222222));
-
-			var light = new THREE.DirectionalLight(0xffffff, 2.25);
-			light.position.set(200, 450, 500);
+			var light = new THREE.DirectionalLight(0xf0f0f0, 2.25);
+			light.position.set(1000, 1000, 1000);
 
 			light.castShadow = true;
 			light.shadowMapWidth = 1024;
@@ -145,9 +136,9 @@ a {
 			//light.shadowCameraVisible = true;
 
 			light.shadowCascade = true;
-			light.shadowCascadeCount = 3;
-			light.shadowCascadeNearZ = [ -1.000, 0.995, 0.998 ];
-			light.shadowCascadeFarZ = [ 0.995, 0.998, 1.000 ];
+			light.shadowCascadeCount = 1;
+			light.shadowCascadeNearZ = [ 1, 1, 1 ];
+			light.shadowCascadeFarZ = [ 1, 1, 1 ];
 			light.shadowCascadeWidth = [ 1024, 1024, 1024 ];
 			light.shadowCascadeHeight = [ 1024, 1024, 1024 ];
 
@@ -155,8 +146,7 @@ a {
 
 			//  GROUND
 
-			var gt = THREE.ImageUtils
-					.loadTexture("textures/terrain/grasslight-big.jpg");
+			var gt = THREE.ImageUtils.loadTexture("textures/terrain/grasslight-big.jpg");
 			var gg = new THREE.PlaneGeometry(16000, 16000);
 			var gm = new THREE.MeshPhongMaterial({
 				color : 0xffffff,
@@ -177,7 +167,7 @@ a {
 				antialias : true
 			});
 			renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-			renderer.setClearColor(scene.fog.color, 1);
+			//renderer.setClearColor(scene.fog.color, 1);
 
 			container.appendChild(renderer.domElement);
 
@@ -204,19 +194,18 @@ a {
 
 			// CONTROLS
 
-			cameraControls = new THREE.TrackballControls(camera,
-					renderer.domElement);
+			cameraControls = new THREE.TrackballControls(camera, renderer.domElement);
 			cameraControls.target.set(50, 50, 50);
 
 			// CHARACTER
 
-			var configOgro = {
+			var cfg_stickman = {
 
 				baseUrl : "models/stickman/",
 
 				body : "stickman.js",
-				skins : [ "stickman.png" ],
-				weapons : [ [ "weapon-light.js", "weapon.jpg" ] ],
+				skins : [ "stickman_blond.png" ],
+				weapons : [],
 				animations : {
 					move : "run",
 					idle : "stand",
@@ -227,7 +216,7 @@ a {
 					crouchAttach : "crattack"
 				},
 
-				walkSpeed : 350,
+				walkSpeed : 900,
 				crouchSpeed : 175
 
 			};
@@ -261,7 +250,7 @@ a {
 				cloneCharacter.root.add(gyro);
 			};
 
-			baseCharacter.loadParts(configOgro);
+			baseCharacter.loadParts(cfg_stickman);
 
 		}
 
