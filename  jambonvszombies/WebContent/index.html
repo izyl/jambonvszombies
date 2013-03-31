@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.2.custom.css" />
-<script type="text/javascript" src="js/core/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="js/ui/jquery-ui-1.10.2.custom.js"></script>
 <head>
+<link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.2.custom.css" />
 <title>Get'em before</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
@@ -19,24 +17,32 @@ a {
 	color: #f00
 }
 
-#welcome_panel {
-	left: 80%;
+#hpView {
+	left: 40%;
 	width: 20%;
 	position: absolute;
-}
-
-#welcome_panel {
+	height: 4px;
 	text-align: center;
 	font-size: small;
 	font-weight: bold;
 	line-height: 1px;
+	text-align: center;
 }
 
-#welcome_panel>div>p {
+#welcomeView {
+	left: 80%;
+	width: 20%;
+	position: absolute;
+	text-align: center;
+	font-size: small;
+	font-weight: bold;
+	line-height: 0px;
+}
+
+#welcomeView>div>p {
 	text-align: center;
 	font-size: medium;
 	font-weight: bold;
-	line-height: 1px;
 	font-variant: small-caps;
 }
 
@@ -57,315 +63,53 @@ a {
 </head>
 <body>
 	<div id="container">
-		<div id="welcome_panel" class="ui-widget-content">
-			<div class="ui-widget-header">
-				<p>Get'em before!</p>
+		<div id="hpView">
+			<div class="ui-widget-header" style="float: left;">
+				<p>Life</p>
 			</div>
+			<div id="playerHP"></div>
+		</div>
+		<div id="welcomeView" class="ui-widget-content">
+			<div class="ui-widget-header">
+				<p>Jambon VS Zombies</p>
+			</div>
+			<p>
+				Welcome : <span id="playerName"></span>
+			</p>
 			<p>Move with arrows</p>
 			<p>look/zoom with mouse</p>
 		</div>
 	</div>
+
+	<!-- core -->
+	<script type="text/javascript" src="js/core/jquery-1.9.1.min.js"></script>
+	<!-- le moteur 3d de Monsieur Doob -->
+	<script src="js/core/three.js"></script>
+	<script type="text/javascript" src="js/core/underscore.js"></script>
+	<script type="text/javascript" src="js/core/backbone.js"></script>
+
+
+	<!-- en dev, on veut voir ses FPS -->
+	<script src="js/ui/stats.min.js"></script>
+	<!-- Permet d'ajouter des controls à l'utilisateur sur la camréra -->
+	<script src="js/controls/TrackballControls.js"></script>
+
+	<!-- game -->
+	<script type="text/javascript" src="js/game/models/gamemodel.js"></script>
+	<script type="text/javascript" src="js/game/models/playermodel.js"></script>
+	<script type="text/javascript" src="js/game/views/gameview.js"></script>
+	<script type="text/javascript" src="js/game/views/hpview.js"></script>
+	<script type="text/javascript" src="js/game/views/infoview.js"></script>
+	<script type="text/javascript" src="js/game/views/radarview.js"></script>
+	<script type="text/javascript" src="js/game/views/weaponview.js"></script>
+	<script type="text/javascript" src="js/game/game.js"></script>
+
+
+	<!-- ui -->
+	<script type="text/javascript" src="js/ui/jquery-ui-1.10.2.custom.js"></script>
 	<!-- webgl obligatoire ! -->
 	<script src="js/ui/detector.js"></script>
 
-	<!-- le moteur 3d de Monsieur Doob -->
-	<script src="js/core/three.js"></script>
-
-	<!-- en dev, on veut voir ses FPS. TOUJOURS, on veut toujours voir -->
-	<script src="js/ui/stats.min.js"></script>
-	<!-- Capte les inputs, est bindé par le MD2CharacterComplex -->
-	<script src="js/controls/TrackballControls.js"></script>
-	<!-- Represente un personnage qui interagit aux inputs
-		Il se déplace, peut avoir une arme, peut sauter, etc...-->
-	<script src='js/core/MD2CharacterComplex.js'></script>
-
-	<script>
-	
-	window.Game = {
-			Models: {},
-			Controllers: {},
-			Views: {}
-		};
-	
-		if (!Detector.webgl)
-			Detector.addGetWebGLMessage();
-
-		var SCREEN_WIDTH = window.innerWidth;
-		var SCREEN_HEIGHT = window.innerHeight;
-
-		var container, camera, scene, renderer;
-
-		var character;
-
-		var cameraControls;
-
-		var controls = {
-
-			moveForward : false,
-			moveBackward : false,
-			moveLeft : false,
-			moveRight : false
-
-		};
-
-		var clock = new THREE.Clock();
-
-		init();
-		animate();
-
-		function init() {
-
-			container = document.createElement('div');
-			document.body.appendChild(container);
-
-			// CAMERA
-
-			camera = new THREE.PerspectiveCamera(45, window.innerWidth
-					/ window.innerHeight, 1, 4000);
-			camera.position.set(0, 150, 1300);
-
-			// SCENE
-
-			scene = new THREE.Scene();
-			scene.fog = new THREE.Fog(0xffffff, 1000, 4000);
-
-			scene.add(camera);
-
-			// LIGHTS
-
-			scene.add(new THREE.AmbientLight(0x222222));
-
-			var light = new THREE.DirectionalLight(0xffffff, 2.25);
-			light.position.set(200, 450, 500);
-
-			light.castShadow = true;
-			light.shadowMapWidth = 1024;
-			light.shadowMapHeight = 1024;
-			light.shadowMapDarkness = 0.95;
-			//light.shadowCameraVisible = true;
-
-			light.shadowCascade = true;
-			light.shadowCascadeCount = 3;
-			light.shadowCascadeNearZ = [ -1.000, 0.995, 0.998 ];
-			light.shadowCascadeFarZ = [ 0.995, 0.998, 1.000 ];
-			light.shadowCascadeWidth = [ 1024, 1024, 1024 ];
-			light.shadowCascadeHeight = [ 1024, 1024, 1024 ];
-
-			scene.add(light);
-
-			//  GROUND
-
-			var gt = THREE.ImageUtils
-					.loadTexture("textures/terrain/grasslight-big.jpg");
-			var gg = new THREE.PlaneGeometry(16000, 16000);
-			var gm = new THREE.MeshPhongMaterial({
-				color : 0xffffff,
-				map : gt
-			});
-
-			var ground = new THREE.Mesh(gg, gm);
-			ground.rotation.x = -Math.PI / 2;
-			ground.material.map.repeat.set(64, 64);
-			ground.material.map.wrapS = ground.material.map.wrapT = THREE.RepeatWrapping;
-			ground.receiveShadow = true;
-
-			scene.add(ground);
-
-			// RENDERER
-
-			renderer = new THREE.WebGLRenderer({
-				antialias : true
-			});
-			renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-			renderer.setClearColor(scene.fog.color, 1);
-
-			container.appendChild(renderer.domElement);
-
-			//
-
-			renderer.gammaInput = true;
-			renderer.gammaOutput = true;
-			renderer.shadowMapEnabled = true;
-
-			renderer.shadowMapCascade = true;
-			renderer.shadowMapType = THREE.PCFSoftShadowMap;
-			//renderer.shadowMapDebug = true;
-
-			// STATS
-
-			stats = new Stats();
-			container.appendChild(stats.domElement);
-
-			// EVENTS
-
-			window.addEventListener('resize', onWindowResize, false);
-			document.addEventListener('keydown', onKeyDown, false);
-			document.addEventListener('keyup', onKeyUp, false);
-
-			// CONTROLS
-
-			cameraControls = new THREE.TrackballControls(camera,
-					renderer.domElement);
-			cameraControls.target.set(50, 50, 50);
-
-			// CHARACTER
-
-			var configOgro = {
-
-				baseUrl : "models/stickman/",
-
-				body : "stickman.js",
-				skins : [ "stickman.png" ],
-				weapons : [ [ "weapon-light.js", "weapon.jpg" ] ],
-				animations : {
-					move : "run",
-					idle : "stand",
-					jump : "jump",
-					attack : "attack",
-					crouchMove : "cwalk",
-					crouchIdle : "cstand",
-					crouchAttach : "crattack"
-				},
-
-				walkSpeed : 350,
-				crouchSpeed : 175
-
-			};
-
-			character = new THREE.MD2CharacterComplex();
-			character.scale = 3;
-			character.controls = controls;
-
-			var baseCharacter = new THREE.MD2CharacterComplex();
-			baseCharacter.scale = 3;
-
-			baseCharacter.onLoadComplete = function() {
-
-				var cloneCharacter = character;
-
-				cloneCharacter.shareParts(baseCharacter);
-
-				cloneCharacter.enableShadows(true);
-
-				cloneCharacter.setWeapon(0);
-				cloneCharacter.setSkin(0);
-
-				cloneCharacter.root.position.x = 150;
-				cloneCharacter.root.position.z = 150;
-
-				scene.add(cloneCharacter.root);
-
-				var gyro = new THREE.Gyroscope();
-				gyro.add(camera);
-
-				cloneCharacter.root.add(gyro);
-			};
-
-			baseCharacter.loadParts(configOgro);
-
-		}
-
-		// EVENT HANDLERS
-
-		function onWindowResize(event) {
-
-			SCREEN_WIDTH = window.innerWidth;
-			SCREEN_HEIGHT = window.innerHeight;
-
-			renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-
-			camera.aspect = SCREEN_WIDTH / SCREEN_HEIGHT;
-			camera.updateProjectionMatrix();
-
-		}
-
-		function onKeyDown(event) {
-
-			switch (event.keyCode) {
-
-			case 38: /*up*/
-			case 87: /*W*/
-				controls.moveForward = true;
-				break;
-
-			case 40: /*down*/
-			case 83: /*S*/
-				controls.moveBackward = true;
-				break;
-
-			case 37: /*left*/
-			case 65: /*A*/
-				controls.moveLeft = true;
-				break;
-
-			case 39: /*right*/
-			case 68: /*D*/
-				controls.moveRight = true;
-				break;
-
-			//case 67: /*C*/     controls.crouch = true; break;
-			//case 32: /*space*/ controls.jump = true; break;
-			//case 17: /*ctrl*/  controls.attack = true; break;
-
-			}
-
-		};
-
-		function onKeyUp(event) {
-
-			switch (event.keyCode) {
-
-			case 38: /*up*/
-			case 87: /*W*/
-				controls.moveForward = false;
-				break;
-
-			case 40: /*down*/
-			case 83: /*S*/
-				controls.moveBackward = false;
-				break;
-
-			case 37: /*left*/
-			case 65: /*A*/
-				controls.moveLeft = false;
-				break;
-
-			case 39: /*right*/
-			case 68: /*D*/
-				controls.moveRight = false;
-				break;
-
-			//case 67: /*C*/     controls.crouch = false; break;
-			//case 32: /*space*/ controls.jump = false; break;
-			//case 17: /*ctrl*/  controls.attack = false; break;
-
-			}
-
-		};
-
-		//
-
-		function animate() {
-
-			requestAnimationFrame(animate);
-			render();
-
-			stats.update();
-
-		}
-
-		function render() {
-
-			var delta = clock.getDelta();
-
-			cameraControls.update(delta);
-
-			character.update(delta);
-
-			renderer.render(scene, camera);
-
-		}
-	</script>
 
 </body>
 </html>
