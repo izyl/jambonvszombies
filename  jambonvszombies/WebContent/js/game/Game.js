@@ -16,11 +16,11 @@ $(function() {
 	});
 	game.infoView = infoView;
 
-	
 	new game.HPView({
 		model : gameModel.playerModel
 	});
 	
 	gameModel.playerModel.set("name", "izyl");
 	gameModel.playerModel.set("life", 100);
+
 });
