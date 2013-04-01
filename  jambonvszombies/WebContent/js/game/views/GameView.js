@@ -186,13 +186,18 @@ $(function($) {
 
 		},
 
+		/**
+		 * TODO : menu d'options pour les controls
+		 */
 		onKeyDown : function(event) {
 
 			var playerModel = game.gameModel.playerModel;
 			switch (event.keyCode) {
 
 			case 38: /* up */
-			case 87: /* W */
+			case 87: /* W querty wsad */
+			case 90: /* Z azert zsqd */
+
 				playerModel.controls.moveForward = true;
 				break;
 
@@ -203,6 +208,7 @@ $(function($) {
 
 			case 37: /* left */
 			case 65: /* A */
+			case 81: /* Q */
 				playerModel.controls.moveLeft = true;
 				break;
 
@@ -232,7 +238,8 @@ $(function($) {
 			switch (event.keyCode) {
 
 			case 38: /* up */
-			case 87: /* W */
+			case 87: /* W querty wsad */
+			case 90: /* Z azert zsqd */
 
 				playerModel.controls.moveForward = false;
 				break;
@@ -244,6 +251,7 @@ $(function($) {
 
 			case 37: /* left */
 			case 65: /* A */
+			case 81: /* Q */
 				playerModel.controls.moveLeft = false;
 				break;
 

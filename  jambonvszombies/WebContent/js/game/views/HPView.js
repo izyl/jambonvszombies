@@ -1,3 +1,7 @@
+/**
+ * Pour toute ces mini vues, soit utiliser le templating backbone soit créé tout l'élément ici.
+ * Le templating serait plus backbone "spirit" mais perso, je préfère tout créér ici.
+ * */
 var game = game || {};
 
 $(function($) {
@@ -8,9 +12,8 @@ $(function($) {
 		},
 
 		update : function() {
-			$("#playerHP").progressbar({
-				value : this.model.get("life") /3
-			});
+			
+			$("#playerHP").progressBar(this.model.get("life")  * 100 / this.model.maxLife);
 			return this;
 		}
 	});

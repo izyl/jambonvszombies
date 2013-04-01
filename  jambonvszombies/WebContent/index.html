@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.2.custom.css" />
-<title>Get'em before</title>
+<title>Jambon vs zombies</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <style>
@@ -11,6 +11,7 @@ body {
 	color: #fff;
 	margin: 0px;
 	overflow: hidden;
+	font-size: 0.6em;
 }
 
 a {
@@ -21,11 +22,8 @@ a {
 	left: 40%;
 	width: 20%;
 	position: absolute;
-	height: 4px;
 	text-align: center;
-	font-size: small;
 	font-weight: bold;
-	line-height: 1px;
 	text-align: center;
 }
 
@@ -34,14 +32,12 @@ a {
 	width: 20%;
 	position: absolute;
 	text-align: center;
-	font-size: small;
 	font-weight: bold;
 	line-height: 0px;
 }
 
 #welcomeView>div>p {
 	text-align: center;
-	font-size: medium;
 	font-weight: bold;
 	font-variant: small-caps;
 }
@@ -64,17 +60,15 @@ a {
 <body>
 	<div id="container">
 		<div id="hpView">
-			<div class="ui-widget-header" style="float: left;">
-				<p>Life</p>
-			</div>
-			<div id="playerHP"></div>
+			<div class="ui-widget-header" style="float: left; height: 8px; padding-bottom: 2px">Life</div>
+			<div id="playerHP" style="float: left;"></div>
 		</div>
 		<div id="welcomeView" class="ui-widget-content">
 			<div class="ui-widget-header">
 				<p>Jambon VS Zombies</p>
 			</div>
 			<p>
-				Welcome : <span id="playerName"></span>
+				Jambon hero : <span id="playerName"></span>
 			</p>
 			<p>Move with arrows</p>
 			<p>look/zoom with mouse</p>
@@ -93,6 +87,7 @@ a {
 	<script src="js/ui/stats.min.js"></script>
 	<!-- Permet d'ajouter des controls à l'utilisateur sur la camréra -->
 	<script src="js/controls/TrackballControls.js"></script>
+	<script type="text/javascript" src="js/ui/jquery.progressbar.min.js"></script>
 
 	<!-- game -->
 	<script type="text/javascript" src="js/game/models/gamemodel.js"></script>

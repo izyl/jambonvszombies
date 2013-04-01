@@ -19,6 +19,7 @@ $(function($) {
 			this.name = "Your jambon hero user name";
 
 			this.life = 100;
+			this.maxLife = this.life;
 			this.scale = 3;
 
 			// animation parameters
