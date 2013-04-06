@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.2.custom.css" />
-<title>Jambon vs zombies</title>
+<title>Jambon Tests</title>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 <style>
@@ -57,22 +57,8 @@ a {
 </style>
 </head>
 <body>
-	<div id="container">
-		<div id="hpView">
-			<div class="ui-widget-header" style="float: left; height: 8px; padding-bottom: 2px">Life</div>
-			<div id="playerHP" style="float: left;"></div>
-		</div>
-		<div id="welcomeView" class="ui-widget-content">
-			<div class="ui-widget-header">
-				<p>Jambon VS Zombies</p>
-			</div>
-			<p>
-				Jambon hero : <span id="playerName"></span>
-			</p>
-			<p>Move with arrows</p>
-			<p>look/zoom with mouse</p>
-		</div>
-	</div>
+
+	<div id="container"></div>
 
 	<!-- core -->
 	<script type="text/javascript" src="js/core/jquery-1.9.1.min.js"></script>
@@ -88,6 +74,7 @@ a {
 	<script type="text/javascript" src="js/shaders/HatchingShader.js"></script>
 	<script type="text/javascript" src="js/shaders/OutlineShader.js"></script>
 	<script type="text/javascript" src="js/shaders/EdgeShader.js"></script>
+	<script type="text/javascript" src="js/shaders/EdgeShader2.js"></script>
 	<script type="text/javascript" src="js/shaders/ToonShader.js"></script>
 
 
@@ -105,8 +92,7 @@ a {
 	<script type="text/javascript" src="js/game/views/InfoView.js"></script>
 	<script type="text/javascript" src="js/game/views/RadarView.js"></script>
 	<script type="text/javascript" src="js/game/views/WeaponView.js"></script>
-	<script type="text/javascript" src="js/game/levels/LevelManager.js"></script>
-	<script type="text/javascript" src="js/game/Game.js"></script>
+	<script type="text/javascript" src="../test/Test.js"></script>
 
 
 	<!-- ui -->
@@ -114,6 +100,105 @@ a {
 	<!-- webgl obligatoire ! -->
 	<script src="js/ui/detector.js"></script>
 
+	<script type="text/javascript">
+		var light, pointLight, ambientLight;
+		var scene = new THREE.Scene();
+		var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+		var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+		var camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+		scene.add(camera);
+		camera.position.set(0, 550, 500);
+		camera.lookAt(scene.position);
+		var controls = new THREE.TrackballControls(camera);
 
+		// renderer
+		var renderer = new THREE.WebGLRenderer({
+			clearAlpha : 1,
+			clearColor : 0xcccccc
+		});
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		var container = document.createElement('div');
+		document.body.appendChild(container);
+		container.appendChild(renderer.domElement);
+
+		// SCENE
+		// CAMERA
+
+		light = new THREE.DirectionalLight(0xffffff);
+		light.position.set(0.5, 0.5, 1);
+		scene.add(light);
+
+		pointLight = new THREE.PointLight(0xff3300);
+		pointLight.position.set(0, 0, 100);
+		scene.add(pointLight);
+
+		ambientLight = new THREE.AmbientLight(0x080808);
+		scene.add(ambientLight);
+
+		var gt = THREE.ImageUtils.loadTexture("textures/terrain/grasslight-mini.jpg");
+		var gg = new THREE.PlaneGeometry(16000, 16000);
+		var gm = new THREE.MeshPhongMaterial({
+			color : 0xffffff,
+			map : gt
+		});
+
+		var ground = new THREE.Mesh(gg, gm);
+		ground.rotation.x = -Math.PI / 2;
+		ground.material.map.repeat.set(64, 64);
+		ground.material.map.wrapS = ground.material.map.wrapT = THREE.RepeatWrapping;
+		ground.receiveShadow = true;
+
+		scene.add(ground);
+
+		/* var mat = new THREE.ShaderMaterial({
+			uniforms : THREE.UniformsUtils.clone(THREE.HatchingShader.uniforms),
+			vertexShader : THREE.HatchingShader.vertexShader,
+			fragmentShader : THREE.HatchingShader.fragmentShader
+
+		});
+
+		addMesh(mat); */
+
+
+		// var uni = THREE.UniformsUtils.clone( THREE.EdgeShader.uniforms );
+		/* var mat = new THREE.ShaderMaterial({
+			uniforms : THREE.UniformsUtils.clone(THREE.ToonShader["toon1"].uniforms),
+			vertexShader : THREE.ToonShader["toon1"].vertexShader,
+			fragmentShader : THREE.ToonShader["toon1"].fragmentShader
+
+		}); */
+		var mat = new THREE.MeshBasicMaterial({
+			wireframe : true,
+			wireframeLinewidth : 3
+		});
+
+		addMesh(mat);
+		
+
+		animate();
+
+		function addMesh(mat) {
+			var geo = new THREE.SphereGeometry(200, 100, 50);
+			var mesh = new THREE.Mesh(geo, mat);
+			mesh.position = new THREE.Vector3(100, 200, 50);
+			scene.add(mesh);
+		};
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+			render();
+			update();
+		};
+
+		function update() {
+			controls.update();
+		}
+
+		function render() {
+			renderer.render(scene, camera);
+
+		};
+	</script>
 </body>
 </html>

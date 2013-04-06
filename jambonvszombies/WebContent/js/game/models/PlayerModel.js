@@ -1,10 +1,10 @@
 /**
  * @author izyl
  * 
- * Player's Model, it holds all the player's logics and characteristics, it's getting user's inputs and fire the events to the player view <br/>This is three.js
- * MD2CharacterComplex serving as a model for applications views
+ * This is three.js MD2CharacterComplex serving as a model for applications views<br/>
+ * Player's Model, it holds all the player's logics and characteristics, it's getting user's inputs and fires the events to the player's view 
  * 
- * @see Game.Views.*
+ * @see game.views.*
  */
 
 var game = game || {};
@@ -37,6 +37,7 @@ $(function($) {
 			// rig
 			this.root = new THREE.Object3D();
 			this.meshBody = null;
+			this.meshOutline = null;
 			this.meshWeapon = null;
 			this.controls = null;
 
@@ -58,6 +59,7 @@ $(function($) {
 			// internal movement control variables
 			this.speed = 0;
 			this.bodyOrientation = 0;
+			this.dir = new THREE.Vector3(0, 0, 0);
 
 			this.walkSpeed = this.maxSpeed;
 			this.crouchSpeed = this.maxSpeed * 0.5;
@@ -108,7 +110,7 @@ $(function($) {
 			this.setSkin(0);
 
 		},
-		
+
 		// API
 
 		enableShadows : function(enable) {
@@ -160,12 +162,18 @@ $(function($) {
 				geo.computeBoundingBox();
 				self.root.position.y = -self.scale * geo.boundingBox.min.y;
 
-				var mesh = self.createPart(geo, self.skinsBody[0]);
+				var meshes = self.createPart(geo, self.skinsBody[0]);
+
+				var mesh = meshes.innerMesh;
 				mesh.scale.set(self.scale, self.scale, self.scale);
-
 				self.root.add(mesh);
-
 				self.meshBody = mesh;
+				self.meshes.push(mesh);
+
+				mesh = meshes.outlineMesh;
+				mesh.scale.set(self.scale, self.scale, self.scale);
+				self.root.add(mesh);
+				self.meshOutline = mesh;
 				self.meshes.push(mesh);
 
 				self.checkLoadingComplete();
@@ -274,7 +282,10 @@ $(function($) {
 			if (this.meshBody) {
 
 				this.meshBody.setAnimationWeight(animationName, 0);
+				this.meshOutline.setAnimationWeight(animationName, 0);
+
 				this.meshBody.playAnimation(animationName);
+				this.meshOutline.playAnimation(animationName);
 
 				this.oldAnimation = this.activeAnimation;
 				this.activeAnimation = animationName;
@@ -319,9 +330,13 @@ $(function($) {
 			if (this.meshBody) {
 
 				this.meshBody.update(delta);
+				this.meshOutline.update(delta);
 
 				this.meshBody.setAnimationWeight(this.activeAnimation, mix);
+				this.meshOutline.setAnimationWeight(this.activeAnimation, mix);
+
 				this.meshBody.setAnimationWeight(this.oldAnimation, 1 - mix);
+				this.meshOutline.setAnimationWeight(this.oldAnimation, 1 - mix);
 
 			}
 
@@ -382,7 +397,6 @@ $(function($) {
 			}
 
 			// set animations
-
 			if (controls.moveForward || controls.moveBackward || controls.moveLeft || controls.moveRight) {
 
 				if (this.activeAnimation !== moveAnimation) {
@@ -412,6 +426,8 @@ $(function($) {
 					this.meshBody.setAnimationDirectionForward(this.activeAnimation);
 					this.meshBody.setAnimationDirectionForward(this.oldAnimation);
 
+					this.meshOutline.setAnimationDirectionForward(this.activeAnimation);
+					this.meshOutline.setAnimationDirectionForward(this.oldAnimation);
 				}
 
 				if (this.meshWeapon) {
@@ -429,6 +445,9 @@ $(function($) {
 
 					this.meshBody.setAnimationDirectionBackward(this.activeAnimation);
 					this.meshBody.setAnimationDirectionBackward(this.oldAnimation);
+
+					this.meshOutline.setAnimationDirectionBackward(this.activeAnimation);
+					this.meshOutline.setAnimationDirectionBackward(this.oldAnimation);
 
 				}
 
@@ -454,7 +473,7 @@ $(function($) {
 			else
 				this.maxSpeed = this.walkSpeed;
 
-			this.maxReverseSpeed = -this.maxSpeed;
+			this.maxReverseSpeed = -this.maxSpeed / 2;
 
 			if (controls.moveForward)
 				this.speed = THREE.Math.clamp(this.speed + delta * this.frontAcceleration, this.maxReverseSpeed, this.maxSpeed);
@@ -502,6 +521,8 @@ $(function($) {
 
 			var forwardDelta = this.speed * delta;
 
+			this.dir.set(Math.sin(this.bodyOrientation), this.root.position.y, Math.cos(this.bodyOrientation));
+
 			this.root.position.x += Math.sin(this.bodyOrientation) * forwardDelta;
 			this.root.position.z += Math.cos(this.bodyOrientation) * forwardDelta;
 
@@ -532,47 +553,34 @@ $(function($) {
 
 			geometry.computeMorphNormals();
 
-			var whiteMap = THREE.ImageUtils.generateDataTexture(1, 1, new THREE.Color(0xffffff));
-			var materialWireframe = new THREE.MeshPhongMaterial({
-				color : 0xffaa00,
-				specular : 0x111111,
-				shininess : 50,
-				wireframe : true,
-				shading : THREE.SmoothShading,
-				map : whiteMap,
+			var materialWireframe = new THREE.MeshBasicMaterial({
+				color : 0x000000,
 				morphTargets : true,
-				morphNormals : true,
-				metal : true
+				wireframe : true,
+				wireframeLinewidth : 10
 			});
+			// postprocessing : ToonShading
 
 			var materialTexture = new THREE.MeshPhongMaterial({
-				color : 0xffffff,
-				specular : 0x111111,
-				shininess : 50,
-				wireframe : false,
-				shading : THREE.SmoothShading,
-				map : skinMap,
-				morphTargets : true,
-				morphNormals : true,
-				metal : true
-			});
-			materialTexture.wrapAround = true;
+				shading : THREE.FlatShading,
+				morphTargets : true
 
-			//
+			});
 
 			var mesh = new THREE.MorphBlendMesh(geometry, materialTexture);
 			mesh.rotation.y = -Math.PI / 2;
 
-			//
-
 			mesh.materialTexture = materialTexture;
-			mesh.materialWireframe = materialWireframe;
-
-			//
-
 			mesh.autoCreateAnimations(this.animationFPS);
 
-			return mesh;
+			var mesh2 = new THREE.MorphBlendMesh(geometry, materialWireframe);
+			mesh2.rotation.y = -Math.PI / 2;
+			mesh2.autoCreateAnimations(this.animationFPS);
+
+			return {
+				innerMesh : mesh,
+				outlineMesh : mesh2
+			};
 
 		},
 

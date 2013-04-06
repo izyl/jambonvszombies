@@ -10,6 +10,10 @@ $(function($) {
 		scene : null,
 		renderer : null,
 
+		projector : null,
+		INTERSECTED : null,
+		rayLine : null,
+
 		viewportWidth : null,
 		viewportHeight : null,
 
@@ -22,80 +26,35 @@ $(function($) {
 		max_frame_skip : 10,
 		skip_ticks : 1000 / this.fps,
 
+		levelManager : null,
+
 		/*
 		 * function initialize
 		 */
 		initialize : function() {
 			_.bindAll(this, "animate", "render", "update");
 
-			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
+			if (!Detector.webgl)
+				Detector.addGetWebGLMessage();
+
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 40000);
 			camera.position.set(0, 150, 1300);
 
 			// SCENE
 			scene = new THREE.Scene();
-			scene.fog = new THREE.Fog(0xeddddd, 1000, 4000);
 			scene.add(camera);
 
-			// LIGHTS
-			scene.add(new THREE.AmbientLight(0x222222));
-
-			var light = new THREE.DirectionalLight(0xffffff, 2.25);
-			light.position.set(200, 450, 500);
-
-			light.castShadow = true;
-			light.shadowMapWidth = 1024;
-			light.shadowMapHeight = 1024;
-			light.shadowMapDarkness = 0.95;
-			// light.shadowCameraVisible = true;
-
-			light.shadowCascade = true;
-			light.shadowCascadeCount = 3;
-			light.shadowCascadeNearZ = [ -1.000, 0.995, 0.998 ];
-			light.shadowCascadeFarZ = [ 0.995, 0.998, 1.000 ];
-			light.shadowCascadeWidth = [ 1024, 1024, 1024 ];
-			light.shadowCascadeHeight = [ 1024, 1024, 1024 ];
-
-			scene.add(light);
-
-			// GROUND
-
-			var gt = THREE.ImageUtils.loadTexture("textures/terrain/grasslight-big.jpg");
-			var gg = new THREE.PlaneGeometry(16000, 16000);
-			var gm = new THREE.MeshPhongMaterial({
-				color : 0xffffff,
-				map : gt
-			});
-
-			var ground = new THREE.Mesh(gg, gm);
-			ground.rotation.x = -Math.PI / 2;
-			ground.material.map.repeat.set(64, 64);
-			ground.material.map.wrapS = ground.material.map.wrapT = THREE.RepeatWrapping;
-			ground.receiveShadow = true;
-
-			scene.add(ground);
-
 			// RENDERER
-
 			renderer = new THREE.WebGLRenderer({
-				antialias : true
+				antialias : true,
+				clearAlpha : 1,
+				clearColor : 0xccdddd
 			});
 
 			viewportWidth = window.innerWidth;
 			viewportHeight = window.innerHeight;
 			renderer.setSize(viewportWidth, viewportHeight);
-			renderer.setClearColor(scene.fog.color, 1);
-
 			container.appendChild(renderer.domElement);
-
-			//
-
-			renderer.gammaInput = true;
-			renderer.gammaOutput = true;
-			renderer.shadowMapEnabled = true;
-
-			renderer.shadowMapCascade = true;
-			renderer.shadowMapType = THREE.PCFSoftShadowMap;
-			// renderer.shadowMapDebug = true;
 
 			// STATS
 
@@ -113,7 +72,14 @@ $(function($) {
 			cameraControls = new THREE.TrackballControls(camera, renderer.domElement);
 			cameraControls.target.set(50, 50, 50);
 
+			projector = new THREE.Projector();
+
+			levelManager = new game.LevelManager();
+			levelManager.scene = scene;
+			levelManager.buildLevel(1);
+
 			this.listenTo(this.model, 'ready', this.addPlayer);
+			
 		},
 
 		addPlayer : function() {
@@ -124,21 +90,23 @@ $(function($) {
 			var gyro = new THREE.Gyroscope();
 			gyro.add(camera);
 			root.add(gyro);
-
 			this.animate();
-		},
-
-		/*
-		 * function update Handles game state updates
-		 */
-		update : function() {
-
 		},
 
 		animate : function() {
 
 			requestAnimationFrame(this.animate);
+			this.update();
+
 			this.render();
+		},
+
+		/**
+		 * function update Handles game state updates
+		 */
+		update : function() {
+
+			//this.collisions();
 
 			var delta = this.clock.getDelta();
 			cameraControls.update(delta);
@@ -146,7 +114,69 @@ $(function($) {
 			stats.update();
 		},
 
-		/*
+		collisions : function() {
+
+			//currentPosition.y = this.model.root.position.y;
+			// var vector = new THREE.Vector3( position.x, position.y, position.z );
+			// var normalized = this.model.dir.normalize();
+
+			// this.controls = {
+			//
+			// moveForward : false,
+			// moveBackward : false,
+			// moveLeft : false,
+			// moveRight : false,
+			// crouch : false,
+			// jump : false,
+			// attack : false
+			// };
+			
+			var playerMesh =  this.model.meshBody;
+			var originPoint =  this.model.root.position.clone();
+			
+			
+			for (var vertexIndex = 0; vertexIndex < playerMesh.geometry.vertices.length; vertexIndex++)
+			{		
+				var localVertex = playerMesh.geometry.vertices[vertexIndex].clone();
+				var globalVertex = localVertex.applyMatrix4( this.model.root.matrix );
+				var directionVector = globalVertex.sub( this.model.root.position );
+				var normalized = directionVector.clone().normalize();
+				normalized.y = 0;
+				
+				var raycaster = new THREE.Raycaster( originPoint, normalized );
+				var intersects = raycaster.intersectObjects(scene.children);
+				
+
+				if (intersects.length > 0) {
+					//console.log(INTERSECTED);
+					if (INTERSECTED != intersects[0].object) {
+
+						if (INTERSECTED)
+							INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+						INTERSECTED = intersects[0].object;
+						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+						INTERSECTED.material.emissive.setHex(0x11aa55);
+						console.log(INTERSECTED);
+
+					}
+
+				} else {
+
+					if (this.INTERSECTED)
+						INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+
+					INTERSECTED = null;
+
+				}
+			}	
+			
+			
+		
+
+
+		},
+
+		/**
 		 * function render Keeps updates at around 50 per second while trying to render the scene as fast as possible
 		 */
 		render : function() {
@@ -191,40 +221,41 @@ $(function($) {
 		 */
 		onKeyDown : function(event) {
 
-			var playerModel = game.gameModel.playerModel;
+			var controls = game.gameModel.playerModel.controls;
+
 			switch (event.keyCode) {
 
 			case 38: /* up */
 			case 87: /* W querty wsad */
 			case 90: /* Z azert zsqd */
 
-				playerModel.controls.moveForward = true;
+				controls.moveForward = true;
 				break;
 
 			case 40: /* down */
 			case 83: /* S */
-				playerModel.controls.moveBackward = true;
+				controls.moveBackward = true;
 				break;
 
 			case 37: /* left */
 			case 65: /* A */
 			case 81: /* Q */
-				playerModel.controls.moveLeft = true;
+				controls.moveLeft = true;
 				break;
 
 			case 39: /* right */
 			case 68: /* D */
-				playerModel.controls.moveRight = true;
+				controls.moveRight = true;
 				break;
 
 			case 67: /* C */
-				playerModel.controls.crouch = true;
+				controls.crouch = true;
 				break;
 			case 32: /* space */
-				playerModel.controls.jump = true;
+				controls.jump = true;
 				break;
 			case 17: /* ctrl */
-				playerModel.controls.attack = true;
+				controls.attack = true;
 				break;
 
 			}
@@ -233,7 +264,7 @@ $(function($) {
 
 		onKeyUp : function(event) {
 
-			var playerModel = game.gameModel.playerModel;
+			var controls = game.gameModel.playerModel.controls;
 
 			switch (event.keyCode) {
 
@@ -241,33 +272,33 @@ $(function($) {
 			case 87: /* W querty wsad */
 			case 90: /* Z azert zsqd */
 
-				playerModel.controls.moveForward = false;
+				controls.moveForward = false;
 				break;
 
 			case 40: /* down */
 			case 83: /* S */
-				playerModel.controls.moveBackward = false;
+				controls.moveBackward = false;
 				break;
 
 			case 37: /* left */
 			case 65: /* A */
 			case 81: /* Q */
-				playerModel.controls.moveLeft = false;
+				controls.moveLeft = false;
 				break;
 
 			case 39: /* right */
 			case 68: /* D */
-				playerModel.controls.moveRight = false;
+				controls.moveRight = false;
 				break;
 
 			case 67: /* C */
-				playerModel.controls.crouch = false;
+				controls.crouch = false;
 				break;
 			case 32: /* space */
-				playerModel.controls.jump = false;
+				controls.jump = false;
 				break;
 			case 17: /* ctrl */
-				playerModel.controls.attack = false;
+				controls.attack = false;
 				break;
 
 			}
