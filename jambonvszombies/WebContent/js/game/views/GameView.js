@@ -11,8 +11,11 @@ $(function($) {
 		renderer : null,
 
 		projector : null,
-		INTERSECTED : null,
-		rayLine : null,
+		raycaster : new THREE.Raycaster(),
+		rays : new Array(),
+		rayLineMaterial : new THREE.LineBasicMaterial({
+			color : 0xff0000
+		}),
 
 		viewportWidth : null,
 		viewportHeight : null,
@@ -79,7 +82,7 @@ $(function($) {
 			levelManager.buildLevel(1);
 
 			this.listenTo(this.model, 'ready', this.addPlayer);
-			
+
 		},
 
 		addPlayer : function() {
@@ -96,9 +99,8 @@ $(function($) {
 		animate : function() {
 
 			requestAnimationFrame(this.animate);
-			this.update();
-
 			this.render();
+			this.update();
 		},
 
 		/**
@@ -106,17 +108,17 @@ $(function($) {
 		 */
 		update : function() {
 
-			//this.collisions();
 
 			var delta = this.clock.getDelta();
-			cameraControls.update(delta);
 			this.model.update(delta);
+			this.collisions();
+			cameraControls.update(delta);
 			stats.update();
 		},
 
 		collisions : function() {
 
-			//currentPosition.y = this.model.root.position.y;
+			// currentPosition.y = this.model.root.position.y;
 			// var vector = new THREE.Vector3( position.x, position.y, position.z );
 			// var normalized = this.model.dir.normalize();
 
@@ -130,50 +132,41 @@ $(function($) {
 			// jump : false,
 			// attack : false
 			// };
-			
-			var playerMesh =  this.model.meshBody;
-			var originPoint =  this.model.root.position.clone();
-			
-			
-			for (var vertexIndex = 0; vertexIndex < playerMesh.geometry.vertices.length; vertexIndex++)
-			{		
+
+			var playerMesh = this.model.meshBody;
+			var originPoint = this.model.root.position.clone();
+
+//			while (this.rays.length > 0) {
+//				scene.remove(this.rays.pop());
+//			}
+
+			for ( var vertexIndex = 0; vertexIndex < playerMesh.geometry.vertices.length; vertexIndex++) {
+
 				var localVertex = playerMesh.geometry.vertices[vertexIndex].clone();
-				var globalVertex = localVertex.applyMatrix4( this.model.root.matrix );
-				var directionVector = globalVertex.sub( this.model.root.position );
-				var normalized = directionVector.clone().normalize();
-				normalized.y = 0;
-				
-				var raycaster = new THREE.Raycaster( originPoint, normalized );
-				var intersects = raycaster.intersectObjects(scene.children);
-				
+				var globalVertex = localVertex.applyMatrix4(playerMesh.matrix);
+				var directionVector = globalVertex.sub(playerMesh.position);
 
-				if (intersects.length > 0) {
-					//console.log(INTERSECTED);
-					if (INTERSECTED != intersects[0].object) {
+				this.raycaster.set( originPoint, directionVector.clone().normalize() );
+				var intersects = this.raycaster.intersectObjects(levelManager.buildings);
 
-						if (INTERSECTED)
-							INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-						INTERSECTED = intersects[0].object;
-						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-						INTERSECTED.material.emissive.setHex(0x11aa55);
-						console.log(INTERSECTED);
-
-					}
-
-				} else {
-
-					if (this.INTERSECTED)
-						INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-
-					INTERSECTED = null;
+				if (intersects.length > 0 && intersects[0].distance < 20) {
+					console.log(intersects[0].object.name);
+					intersects[0].object.material.color = 0xff0000;
 
 				}
-			}	
-			
-			
-		
+				//this.traceRay();
+			}
 
+		},
 
+		traceRay : function() {
+
+			var geometry = new THREE.Geometry();
+			geometry.vertices.push(this.raycaster.ray.origin);
+			geometry.vertices.push(this.raycaster.ray.origin.clone().add(this.raycaster.ray.direction.clone().multiplyScalar(1000)));
+			var rayLine = new THREE.Line(geometry, this.rayLineMaterial);
+			scene.add(rayLine);
+			this.rays.push(rayLine);
 		},
 
 		/**

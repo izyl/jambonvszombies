@@ -59,7 +59,6 @@ $(function($) {
 			// internal movement control variables
 			this.speed = 0;
 			this.bodyOrientation = 0;
-			this.dir = new THREE.Vector3(0, 0, 0);
 
 			this.walkSpeed = this.maxSpeed;
 			this.crouchSpeed = this.maxSpeed * 0.5;
@@ -520,9 +519,6 @@ $(function($) {
 			// displacement
 
 			var forwardDelta = this.speed * delta;
-
-			this.dir.set(Math.sin(this.bodyOrientation), this.root.position.y, Math.cos(this.bodyOrientation));
-
 			this.root.position.x += Math.sin(this.bodyOrientation) * forwardDelta;
 			this.root.position.z += Math.cos(this.bodyOrientation) * forwardDelta;
 

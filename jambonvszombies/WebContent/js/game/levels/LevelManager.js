@@ -7,6 +7,8 @@ $(function($) {
 		level : -1,
 		scene : null,
 		lights : new Array(),
+		walls : null,
+		buildings : new Array(),
 		mapDimension : {
 			width : 16000,
 			depth : 16000,
@@ -63,6 +65,7 @@ $(function($) {
 			mesh.overDraw = true;
 			mesh.position = new THREE.Vector3(0, 0, 0);
 			mesh.name = "level walls";
+			this.walls = mesh;
 			this.scene.add(mesh);
 
 		},
@@ -92,10 +95,10 @@ $(function($) {
 
 			var cubeGeo = new THREE.CubeGeometry(width, height, depth);
 
-			var mat1 = new THREE.MeshPhongMaterial({
+			var mat1 = new THREE.MeshLambertMaterial({
 				shading : THREE.FlatShading
 			});
-			var mat2 = new THREE.MeshPhongMaterial({
+			var mat2 = new THREE.MeshLambertMaterial({
 				wireframe : true
 			});
 
@@ -139,24 +142,31 @@ $(function($) {
 					mergeMesh.translate(height / 2, mergeMesh.up);
 					this.scene.add(mergeMesh);
 
-					var sphereGeo = new THREE.SphereGeometry(5, 5, 5);
+					var geo = new THREE.CubeGeometry(2, 10, 2);
 
 					var color = 0x0026FF;
 					Math.random() > 0.5 ? color = 0xFF0000 : color = 0x0026FF;
 
-					var mat = new THREE.MeshBasicMaterial({
-						color : color
-					});
-					var sticklight = new THREE.Mesh(sphereGeo, mat);
+					var mat = new THREE.MeshPhongMaterial({
+				        color: color,
+				        shininess: 100.0,
+				        ambient: 0xffffff,
+				        emissive: 0x111111,
+				        specular: 0xbbbbbb
+				      });
+					var sticklight = new THREE.Mesh(geo, mat);
 					sticklight.position.x = mergeMesh.position.x;
 					sticklight.position.y = mergeMesh.position.y;
 					sticklight.position.z = mergeMesh.position.z;
-					sticklight.translate(stickheight / 2, mergeMesh.up);
+					sticklight.translate(stickheight / 2 + 5, mergeMesh.up);
 					this.scene.add(sticklight);
 				}
 			}
 
 			mesh.name="building";
+			mesh.children[0].name="BuildingMesh0";
+			mesh.children[1].name="BuildingMesh1";
+			this.buildings.push(mesh.children[0]);
 			this.scene.add(mesh);
 		},
 
